@@ -1,0 +1,69 @@
+#include "widget.h"
+#include "ui_widget.h"
+#include <QDateTime>
+#include <QDebug>
+
+
+Widget::Widget(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Widget)
+{
+
+    ui->setupUi(this);
+    setWindowFlags(windowFlags()&~Qt::WindowMaximizeButtonHint);
+    setaddr = new Startup;
+
+   connect(setaddr,SIGNAL(Addrsig(QString)),SLOT(Addrslot(QString)));
+    setaddr->exec();
+
+
+     timer = new QTimer;
+    timer->start(1000);
+    connect(timer,&QTimer::timeout,[=](){QDateTime current_time = QDateTime::currentDateTime();
+        QString StrCurrentTime = current_time.toString("yyyy-MM-dd hh:mm:ss ddd");
+        ui->time->setText(StrCurrentTime);});
+
+
+    ui->send->setEnabled(false);
+}
+
+void Widget::Addrslot(QString addr){
+    this->ui->addr->setText("服务器地址:"+addr + ":8080");
+}
+QString Widget::ip(){
+    return ui->addr->text().section(':',1,1);
+}
+Widget::~Widget()
+{
+    delete ui;
+    delete timer;
+}
+
+void Widget::on_pushButton_clicked()
+{
+
+}
+
+void Widget::on_Reg_clicked()
+{
+    Reg *reg = new Reg(this); //记得delete 掉内存;
+    hide();
+    connect(reg->socket(),SIGNAL(connected()),reg,SLOT(show()));
+    connect(reg->socket(),SIGNAL(connected()),this,SLOT(hide()));
+    //reg->socket()->connectToHost(this->ip(),reg->Regport);
+    reg->socket()->connectToHost(this->ip(),10000); //先用10000端口测试
+    auto ret = reg->socket()->waitForConnected(20000);
+    if (!ret){
+        QMessageBox::warning(this,"你搁这儿开玩笑呢","怎么注册SRV没开启,打程序员去");
+        show();
+    }
+}
+
+
+void Widget::on_login_clicked()
+{
+    if( ui->inacc->text().isEmpty() ||ui->inpasswd->text().isEmpty() ){
+       QMessageBox::warning(this,)
+       
+    }
+}
